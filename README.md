@@ -1,6 +1,6 @@
-## Szymon Ciurkiewicz - zadanie rekrutacyjne
+# Szymon Ciurkiewicz - zadanie rekrutacyjne
 
 # setup:
 
-# npm install
-# npm run dev
+### npm install
+### npm run dev
