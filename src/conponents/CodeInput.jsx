@@ -16,14 +16,19 @@ const CodeInputComponent = ({ pattern }) => {
 
   // Handle changes to input values, focusing the next input on input
   const handleInputChange = (value, index) => {
-    const updatedValues = [...inputValues];
-    updatedValues[index] = value[0] || ''; // Only take the first character
-    setInputValues(updatedValues);
-
-    if (value && index < totalInputs - 1) {
-      focusInput(index + 1);
+    if (!isNaN(value) && value !== ' ') {
+        const updatedValues = [...inputValues];
+        updatedValues[index] = value[0] || ''; // Only take the first character
+        setInputValues(updatedValues);
+        if (value && index < totalInputs - 1 && updatedValues[index].length > 0) {
+            focusInput(index + 1);
+        }
+    } else if (value === ' ') {
+        const updatedValues = [...inputValues];
+        updatedValues[index] = ''; // Clear the input if space is entered
+        setInputValues(updatedValues);
     }
-  };
+};
 
   // Handle key down events for navigation and deletion
   const handleKeyDown = (event, index) => {
@@ -40,9 +45,8 @@ const CodeInputComponent = ({ pattern }) => {
   const handlePaste = (event, startIndex) => {
     event.preventDefault();
     const pasteContent = event.clipboardData.getData('text').split('');
-    let updatedValues = [...inputValues];
-    let nextIndex = startIndex;
-
+    let updatedValues = Array(totalInputs).fill(''); // Reset all input values
+    let nextIndex = 0; // Start pasting from the beginning
     for (let i = 0; i < pasteContent.length; i++) {
       if (nextIndex >= totalInputs) {
         nextIndex = 0; // Wrap around if necessary
@@ -50,55 +54,77 @@ const CodeInputComponent = ({ pattern }) => {
       updatedValues[nextIndex] = pasteContent[i];
       nextIndex++;
     }
-
     setInputValues(updatedValues);
-    focusInput(nextIndex < totalInputs ? nextIndex : 0);
+    focusInput(startIndex); // Focus on the first input field after pasting
   };
 
   // Render the inputs based on the pattern
   const renderInputs = () => {
     let inputIndex = 0;
+    let separatorIndex = 0;
+    const separatorStyle = {
+      fontSize: '28px',
+      fontWeight: 'bold',
+      margin: '10px',
+    };
     return pattern.map((element, patternIndex) => {
       if (typeof element === 'number') {
-        return Array.from({ length: element }).map((_, index) => {
+        const inputs = Array.from({ length: element }).map((_, index) => {
           const currentIndex = inputIndex;
           inputIndex += 1;
           return (
-            <input
-              key={`${patternIndex}-${index}`}
-              ref={inputRefs.current[currentIndex]}
-              value={inputValues[currentIndex]}
-              onChange={(e) => handleInputChange(e.target.value, currentIndex)}
-              onKeyDown={(e) => handleKeyDown(e, currentIndex)}
-              onPaste={(e) => handlePaste(e, currentIndex)}
-              maxLength={1}
-            />
+            <React.Fragment key={`${patternIndex}-${index}`}>
+              <input
+                ref={inputRefs.current[currentIndex]}
+                value={inputValues[currentIndex]}
+                onChange={(e) => handleInputChange(e.target.value, currentIndex)}
+                onKeyDown={(e) => handleKeyDown(e, currentIndex)}
+                onPaste={(e) => handlePaste(e, currentIndex)}
+                maxLength={1}
+              />
+            </React.Fragment>
           );
         });
+        separatorIndex += 1;
+        return inputs;
+      } else {
+        return (
+          <span key={`separator-${patternIndex}`} style={separatorStyle}>
+            {element}
+          </span>
+        );
       }
-      return null; // If the element isn't a number, don't render anything
     });
   };
 
   // Handle the submission of the form
-  const handleSubmit = () => {
+const handleSubmit = () => {
     let alertString = '';
     let inputCounter = 0;
-
+    let isInputIncomplete = false;
+    
     pattern.forEach((element, index) => {
-      if (typeof element === 'number') {
-        alertString += inputValues.slice(inputCounter, inputCounter + element).join('');
-        inputCounter += element;
-      } else {
-        alertString += element;
-      }
+        if (typeof element === 'number') {
+            const inputValuesSlice = inputValues.slice(inputCounter, inputCounter + element);
+            if (inputValuesSlice.includes('')) {
+                isInputIncomplete = true;
+            }
+            alertString += inputValuesSlice.join('');
+            inputCounter += element;
+        } else {
+            alertString += element;
+        }
     });
 
-    alert(alertString);
-  };
+    if (isInputIncomplete) {
+        alert('Proszę uzupełnić pola.');
+    } else {
+        alert(alertString);
+    }
+};
 
   return (
-    <div>
+    <div className='codeInput'>
       {renderInputs()}
       <hr />
       <button onClick={handleSubmit}>Submit</button>

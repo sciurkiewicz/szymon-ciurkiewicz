@@ -10,7 +10,7 @@ const ExampleComponent = () => {
     <div>
       <p><b>Szymon Ciurkiewicz</b> - zadanie rekrutacyjne (potwierdzenie kodu weryfikacyjnego)</p>
       <h3>Wpisz kod weryfikacyjny 👇</h3>
-      <CodeInput pattern={[2, '-', 1, '=', 3]} />
+      <CodeInput pattern={[2, "-", 5]} />
     </div>
   );
 };
